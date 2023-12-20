@@ -39,12 +39,14 @@ const getData = async (schemaName, req, res) => {
         }
         page = parseInt(page);
         limit = parseInt(limit);
+        let offset = ((page - 1) * limit)
         let query = {};
         let sortOption = {};
 
         // Implement the filter based on the 'filter' query parameter
         if (filter) {
             query.name = { $regex: new RegExp(filter, 'i') };
+            offset = 0
             // You can extend this based on your specific filter criteria
         }
 
@@ -61,14 +63,17 @@ const getData = async (schemaName, req, res) => {
 
         sortOption[sortedColumn] = sortDirection;
 
+        console.log(sortOption);
+
         const totalRecords = await schemaName.countDocuments(query);
         const totalPages = Math.ceil(totalRecords / limit);
 
         data = await schemaName
             .find(query)
+            .collation({locale: "en" })
             .sort(sortOption)
             .limit(limit)
-            .skip((page - 1) * limit);
+            .skip(offset);
 
         const result = {
             data,
@@ -117,7 +122,7 @@ const deleteData = async (schemaName, req, res) => {
         const employeeId = req.params.id;
         const result = await schemaName.findByIdAndDelete(employeeId);
         if (result) {
-           return result
+            return result;
         } else {
             res.status(status.internal_server).json({
                 error: 'Employee not found',
@@ -131,9 +136,27 @@ const deleteData = async (schemaName, req, res) => {
     }
 };
 
+const getDataById = async (schemaName, req, res) => {
+    try {
+        const employeeId = req.params.id;
+        const data = await schemaName.findById(employeeId);
+        console.log(data);
+        if (!data) {
+            res.status(status.unprocess).json({ error: 'Id not found' });
+        }
+        return data;
+    } catch (err) {
+        console.error(`Error fetching data :`, err);
+        return res.status(status.internal_server).json({
+            error: `Failed to fetch data`,
+        });
+    }
+};
+
 module.exports = {
     addData,
     getData,
     updateData,
     deleteData,
+    getDataById,
 };

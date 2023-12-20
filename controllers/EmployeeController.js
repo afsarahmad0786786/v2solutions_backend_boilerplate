@@ -6,22 +6,12 @@ const {
     getData,
     updateData,
     deleteData,
+    getDataById,
 } = require('../utils/wrapper/collections');
 
 const getEmployeesById = async (req, res) => {
-    try {
-        const employeeId = req.params.id;
-        const data = await Employee.findById(employeeId);
-        if (!data) {
-            return res.status(status.unprocess).json({ error: 'Id not found' });
-        }
-        res.status(status.success).json({ data });
-    } catch (err) {
-        console.error('Error fetching employees :', err);
-        res.status(status.internal_server).json({
-            error: 'Failed to fetch employees ',
-        });
-    }
+    const data = await getDataById(Employee, req, res);
+    res.status(status.success).json({ data });
 };
 
 const getEmployees = async (req, res) => {
